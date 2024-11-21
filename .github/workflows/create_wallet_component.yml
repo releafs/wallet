@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: "16"
 
-      # Create frontend files
+      # Create frontend structure and files
       - name: Create frontend structure and files
         run: |
           mkdir -p wallet/frontend/public wallet/frontend/src
@@ -87,12 +87,12 @@ jobs:
         run: |
           python -m venv venv
           source venv/bin/activate
+          pip install --upgrade pip
           pip install streamlit
 
       # Deploy Streamlit app
       - name: Deploy Streamlit app
-        env:
-          STREAMLIT_SERVER_PORT: 8501
         run: |
+          source venv/bin/activate
           echo "Deploying Streamlit app..."
           streamlit run wallet/app.py --server.headless true
