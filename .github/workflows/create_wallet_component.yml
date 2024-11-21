@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  build_and_test:
+  build_and_deploy:
     name: Build and Deploy Streamlit App
     runs-on: ubuntu-latest
 
@@ -24,8 +24,8 @@ jobs:
         with:
           node-version: "16"
 
-      # Create frontend directory and files
-      - name: Create frontend files
+      # Create frontend files
+      - name: Create frontend structure and files
         run: |
           mkdir -p wallet/frontend/public wallet/frontend/src
           echo '{
@@ -89,7 +89,7 @@ jobs:
           source venv/bin/activate
           pip install streamlit
 
-      # Deploy to Streamlit Cloud (for local testing)
+      # Deploy Streamlit app
       - name: Deploy Streamlit app
         env:
           STREAMLIT_SERVER_PORT: 8501
