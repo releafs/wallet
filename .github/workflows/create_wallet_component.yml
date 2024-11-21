@@ -1,97 +1,64 @@
-name: Build and Deploy Streamlit App
+name: Build and Deploy Wallet App
 
 on:
   push:
     branches:
       - main
   pull_request:
-    branches:
-      - main
 
 jobs:
-  build_and_prepare:
-    name: Build and Prepare Streamlit App
+  build_and_deploy:
+    name: Build and Deploy Wallet App
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repository
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    # Step 1: Checkout Repository
+    - name: Checkout Repository
+      uses: actions/checkout@v3
 
-      # Set up Node.js for frontend
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "16"
+    # Step 2: Set up Node.js for Frontend
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
 
-      # Create frontend structure and files
-      - name: Create frontend structure and files
-        run: |
-          mkdir -p wallet/frontend/public wallet/frontend/src
-          echo '{
-            "name": "frontend",
-            "version": "1.0.0",
-            "dependencies": {
-              "react": "^18.2.0",
-              "react-dom": "^18.2.0",
-              "web3": "^1.10.0",
-              "@ethersproject/providers": "^5.7.2",
-              "streamlit-component-lib": "^1.3.0",
-              "react-scripts": "^5.0.1"
-            },
-            "scripts": {
-              "start": "react-scripts start",
-              "build": "react-scripts build"
-            }
-          }' > wallet/frontend/package.json
-          echo "<!DOCTYPE html><html><head><title>Wallet Component</title></head><body><div id='root'></div></body></html>" > wallet/frontend/public/index.html
-          echo "import React from 'react';" > wallet/frontend/src/WalletConnect.js
-          echo "import { Web3Provider } from '@ethersproject/providers';" >> wallet/frontend/src/WalletConnect.js
-          echo "export default function WalletConnect() { return <button>Connect Wallet</button>; }" >> wallet/frontend/src/WalletConnect.js
-          echo "import React from 'react'; import ReactDOM from 'react-dom'; import WalletConnect from './WalletConnect'; ReactDOM.render(<WalletConnect />, document.getElementById('root'));" > wallet/frontend/src/index.js
+    # Step 3: Install Frontend Dependencies and Build
+    - name: Install and Build Frontend
+      run: |
+        echo "Installing and building frontend..."
+        cd wallet/frontend
+        npm install
+        npm run build
 
-      # Install frontend dependencies
-      - name: Install frontend dependencies
-        working-directory: wallet/frontend
-        run: |
-          npm install
+    # Step 4: Commit and Push Changes to Repository
+    - name: Commit and Push Built Frontend Files
+      run: |
+        echo "Committing and pushing changes..."
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add wallet/frontend/build
+        git commit -m "Automated build: Add generated frontend assets"
+        git push origin main || echo "No changes to push"
 
-      # Build frontend
-      - name: Build frontend
-        working-directory: wallet/frontend
-        run: |
-          npm run build
+    # Step 5: Set up Python for Backend
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.9
 
-      # Create Streamlit app
-      - name: Create Streamlit app
-        run: |
-          mkdir -p wallet
-          echo "import streamlit as st" > wallet/app.py
-          echo "from streamlit.components.v1 import declare_component" >> wallet/app.py
-          echo "wallet_component = declare_component('wallet_component', path='./frontend/build')" >> wallet/app.py
-          echo "st.title('Wallet Connect Test')" >> wallet/app.py
-          echo "wallet_address = wallet_component()" >> wallet/app.py
-          echo "if wallet_address:" >> wallet/app.py
-          echo "    st.success(f'Wallet Connected: {wallet_address}')" >> wallet/app.py
-          echo "else:" >> wallet/app.py
-          echo "    st.warning('Please connect your wallet.')" >> wallet/app.py
+    # Step 6: Install Python Dependencies
+    - name: Install Backend Dependencies
+      run: |
+        echo "Installing backend dependencies..."
+        python -m venv venv
+        source venv/bin/activate
+        pip install --upgrade pip
+        pip install -r wallet/requirements.txt
 
-      # Set up Python environment
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.9"
-
-      # Install Python dependencies
-      - name: Install Python dependencies
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install --upgrade pip
-          pip install streamlit
-
-      # Deploy Streamlit app (Optional - comment out this step)
-      - name: (Optional) Deploy Streamlit app
-        if: always()
-        run: |
-          echo "Skipping Streamlit deployment. You can deploy it manually."
+    # Step 7: Deploy Streamlit App (optional)
+    - name: Deploy Streamlit App (Optional)
+      if: ${{ always() }}
+      run: |
+        echo "Streamlit app deployment step. Comment this out if running manually."
+        source venv/bin/activate
+        streamlit run wallet/app.py --server.headless true || echo "Skipping deployment for manual setup."
