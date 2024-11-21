@@ -36,13 +36,13 @@ jobs:
         run: |
           npm run build
 
-- name: Commit and push build files
-  run: |
-    git config --global user.name "github-actions[bot]"
-    git config --global user.email "github-actions[bot]@users.noreply.github.com"
-    git add -f frontend/build
-    git commit -m "Add or update frontend build files" || echo "No changes to commit"
-    git push origin main
+      - name: Commit and push build files
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f frontend/build
+          git commit -m "Add or update frontend build files" || echo "No changes to commit"
+          git push origin main
 
 
       # Set up Python for Streamlit
