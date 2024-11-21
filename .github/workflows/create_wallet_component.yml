@@ -22,12 +22,12 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "16"  # Ensure compatibility with dependencies
+          node-version: "16"
 
       # Create frontend directory and files
       - name: Create frontend files
         run: |
-          mkdir -p wallet_component/frontend/src
+          mkdir -p wallet_component/frontend/public wallet_component/frontend/src
           echo '{
             "name": "frontend",
             "version": "1.0.0",
@@ -42,6 +42,7 @@ jobs:
               "build": "react-scripts build"
             }
           }' > wallet_component/frontend/package.json
+          echo "<!DOCTYPE html><html><head><title>Wallet Component</title></head><body><div id='root'></div></body></html>" > wallet_component/frontend/public/index.html
           echo "import React from 'react';" > wallet_component/frontend/src/WalletConnect.js
           echo "import { Web3Provider } from '@ethersproject/providers';" >> wallet_component/frontend/src/WalletConnect.js
           echo "export default function WalletConnect() { return <button>Connect Wallet</button>; }" >> wallet_component/frontend/src/WalletConnect.js
