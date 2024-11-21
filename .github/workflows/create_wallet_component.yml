@@ -36,6 +36,7 @@ jobs:
         run: |
           npm run build
 
+      # Commit and push build files
       - name: Commit and push build files
         run: |
           git config --global user.name "github-actions[bot]"
@@ -43,7 +44,6 @@ jobs:
           git add -f frontend/build
           git commit -m "Add or update frontend build files" || echo "No changes to commit"
           git push origin main
-
 
       # Set up Python for Streamlit
       - name: Set up Python
@@ -63,4 +63,4 @@ jobs:
       - name: Deploy Streamlit app
         run: |
           source venv/bin/activate
-          streamlit run wallet/app.py --server.headless true
+          streamlit run app.py --server.headless true
