@@ -1,4 +1,4 @@
-name: Build, Test, and Deploy Streamlit App
+name: Build, Test, and Prepare Streamlit App
 
 on:
   push:
@@ -9,8 +9,8 @@ on:
       - main
 
 jobs:
-  build_and_deploy:
-    name: Build, Test, and Deploy Streamlit App
+  build_and_prepare:
+    name: Build and Prepare Streamlit App
     runs-on: ubuntu-latest
 
     steps:
@@ -58,9 +58,3 @@ jobs:
           source venv/bin/activate
           pip install --upgrade pip
           pip install streamlit
-
-      # Deploy Streamlit app
-      - name: Deploy Streamlit app
-        run: |
-          source venv/bin/activate
-          streamlit run app.py --server.headless true
