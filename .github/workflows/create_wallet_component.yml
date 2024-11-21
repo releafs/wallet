@@ -1,43 +1,81 @@
-name: Setup Streamlit Wallet Integration Component Repository
+name: Build and Deploy Streamlit Component
 
 on:
-  workflow_dispatch: # Allows manual triggering of the workflow
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  create-repository:
+  build_and_test:
+    name: Build and Test Streamlit Component
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Python environment
-        uses: actions/setup-python@v4
+      # Set up Node.js for frontend
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          python-version: '3.9'
+          node-version: "16"  # Use Node.js 16 for compatibility
 
-      - name: Create directory structure
-        run: |
-          mkdir -p wallet_component/frontend/src
-          mkdir -p wallet_component/frontend/public
-          echo "# Streamlit Wallet Integration Component" > README.md
-          echo "__pycache__/" >> .gitignore
-          echo "node_modules/" >> .gitignore
-          echo "build/" >> .gitignore
-
-      - name: Create Python backend files
-        run: |
-          echo "from streamlit.components.v1 import declare_component" > wallet_component/wallet_component.py
-          echo "import os" >> wallet_component/wallet_component.py
-          echo "wallet_component = declare_component('wallet_component', path=os.path.dirname(__file__))" >> wallet_component/wallet_component.py
-          echo "from setuptools import setup, find_packages" > setup.py
-          echo "setup(name='wallet_component', version='0.1', packages=find_packages())" >> setup.py
-          echo "streamlit\nweb3" > requirements.txt
-
+      # Create frontend directory and files
       - name: Create frontend files
         run: |
-          echo "{ \"name\": \"frontend\", \"version\": \"1.0.0\", \"dependencies\": { \"react\": \"^18.2.0\", \"web3\": \"^1.10.0\", \"@streamlit/component-lib\": \"^2.1.1\" }, \"scripts\": { \"start\": \"react-scripts start\", \"build\": \"react-scripts build\" } }" > wallet_component/frontend/package.json
+          mkdir -p wallet_component/frontend/src
+          echo '{
+            "name": "frontend",
+            "version": "1.0.0",
+            "dependencies": {
+              "react": "^18.2.0",
+              "web3": "^1.10.0",
+              "@streamlit/component-lib": "^2.1.1"
+            },
+            "scripts": {
+              "start": "react-scripts start",
+              "build": "react-scripts build"
+            }
+          }' > wallet_component/frontend/package.json
           echo "import React from 'react';" > wallet_component/frontend/src/WalletConnect.js
           echo "import { Web3Provider } from '@ethersproject/providers';" >> wallet_component/frontend/src/WalletConnect.js
           echo "export default function WalletConnect() { return <button>Connect Wallet</button>; }" >> wallet_component/frontend/src/WalletConnect.js
-          echo "import React from 'react'; import ReactDOM from 'react-dom'; import WalletConnect from './WalletConnect'; ReactDOM.render(<WalletConnect />, document.getElementBy
+          echo "import React from 'react'; import ReactDOM from 'react-dom'; import WalletConnect from './WalletConnect'; ReactDOM.render(<WalletConnect />, document.getElementById('root'));" > wallet_component/frontend/src/index.js
+          echo "{}" > wallet_component/frontend/src/web3Helpers.js
+
+      # Install frontend dependencies
+      - name: Install frontend dependencies
+        working-directory: wallet_component/frontend
+        run: |
+          npm install
+
+      # Build frontend
+      - name: Build frontend
+        working-directory: wallet_component/frontend
+        run: |
+          npm run build
+
+      # Set up Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      # Install Python dependencies
+      - name: Install Python dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install streamlit
+
+      # Test Streamlit app locally
+      - name: Test Streamlit app locally
+        env:
+          STREAMLIT_SERVER_PORT: 8501
+        run: |
+          source venv/bin/activate
+          streamlit run wallet_component/app.py --server.headless true
