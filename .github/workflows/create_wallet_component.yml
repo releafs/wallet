@@ -1,4 +1,4 @@
-name: Build and Deploy Streamlit Component
+name: Build and Deploy Streamlit App
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   build_and_test:
-    name: Build and Test Streamlit Component
+    name: Build and Deploy Streamlit App
     runs-on: ubuntu-latest
 
     steps:
@@ -27,7 +27,7 @@ jobs:
       # Create frontend directory and files
       - name: Create frontend files
         run: |
-          mkdir -p wallet_component/frontend/public wallet_component/frontend/src
+          mkdir -p wallet/frontend/public wallet/frontend/src
           echo '{
             "name": "frontend",
             "version": "1.0.0",
@@ -43,24 +43,38 @@ jobs:
               "start": "react-scripts start",
               "build": "react-scripts build"
             }
-          }' > wallet_component/frontend/package.json
-          echo "<!DOCTYPE html><html><head><title>Wallet Component</title></head><body><div id='root'></div></body></html>" > wallet_component/frontend/public/index.html
-          echo "import React from 'react';" > wallet_component/frontend/src/WalletConnect.js
-          echo "import { Web3Provider } from '@ethersproject/providers';" >> wallet_component/frontend/src/WalletConnect.js
-          echo "export default function WalletConnect() { return <button>Connect Wallet</button>; }" >> wallet_component/frontend/src/WalletConnect.js
-          echo "import React from 'react'; import ReactDOM from 'react-dom'; import WalletConnect from './WalletConnect'; ReactDOM.render(<WalletConnect />, document.getElementById('root'));" > wallet_component/frontend/src/index.js
+          }' > wallet/frontend/package.json
+          echo "<!DOCTYPE html><html><head><title>Wallet Component</title></head><body><div id='root'></div></body></html>" > wallet/frontend/public/index.html
+          echo "import React from 'react';" > wallet/frontend/src/WalletConnect.js
+          echo "import { Web3Provider } from '@ethersproject/providers';" >> wallet/frontend/src/WalletConnect.js
+          echo "export default function WalletConnect() { return <button>Connect Wallet</button>; }" >> wallet/frontend/src/WalletConnect.js
+          echo "import React from 'react'; import ReactDOM from 'react-dom'; import WalletConnect from './WalletConnect'; ReactDOM.render(<WalletConnect />, document.getElementById('root'));" > wallet/frontend/src/index.js
 
       # Install frontend dependencies
       - name: Install frontend dependencies
-        working-directory: wallet_component/frontend
+        working-directory: wallet/frontend
         run: |
           npm install
 
       # Build frontend
       - name: Build frontend
-        working-directory: wallet_component/frontend
+        working-directory: wallet/frontend
         run: |
           npm run build
+
+      # Create Streamlit app
+      - name: Create Streamlit app
+        run: |
+          mkdir -p wallet
+          echo "import streamlit as st" > wallet/app.py
+          echo "from streamlit.components.v1 import declare_component" >> wallet/app.py
+          echo "wallet_component = declare_component('wallet_component', path='./frontend/build')" >> wallet/app.py
+          echo "st.title('Wallet Connect Test')" >> wallet/app.py
+          echo "wallet_address = wallet_component()" >> wallet/app.py
+          echo "if wallet_address:" >> wallet/app.py
+          echo "    st.success(f'Wallet Connected: {wallet_address}')" >> wallet/app.py
+          echo "else:" >> wallet/app.py
+          echo "    st.warning('Please connect your wallet.')" >> wallet/app.py
 
       # Set up Python environment
       - name: Set up Python
@@ -75,10 +89,10 @@ jobs:
           source venv/bin/activate
           pip install streamlit
 
-      # Test Streamlit app locally
-      - name: Test Streamlit app locally
+      # Deploy to Streamlit Cloud (for local testing)
+      - name: Deploy Streamlit app
         env:
           STREAMLIT_SERVER_PORT: 8501
         run: |
-          source venv/bin/activate
-          streamlit run wallet_component/app.py --server.headless true
+          echo "Deploying Streamlit app..."
+          streamlit run wallet/app.py --server.headless true
