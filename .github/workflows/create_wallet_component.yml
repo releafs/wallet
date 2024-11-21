@@ -1,55 +1,43 @@
-name: Initialize Wallet Component Repository
+name: Setup Streamlit Wallet Integration Component Repository
 
 on:
-  workflow_dispatch:  # Manual trigger for the workflow
+  workflow_dispatch: # Allows manual triggering of the workflow
 
 jobs:
-  create-repository-structure:
-    name: Create Repository Structure
+  create-repository:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Repository Structure
+      - name: Set up Python environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Create directory structure
         run: |
-          echo "Creating folder structure..."
-          mkdir -p wallet_component/frontend/src/utils
+          mkdir -p wallet_component/frontend/src
           mkdir -p wallet_component/frontend/public
-          
-          # Creating core files
-          echo "Initializing core files..."
-          echo "import streamlit.components.v1 as components\n\nwallet_component = components.declare_component('wallet_component', path='./frontend/build')" > wallet_component/wallet_component.py
-          echo "from web3 import Web3\n\ndef setup_web3():\n    return Web3(Web3.HTTPProvider('http://127.0.0.1:8545'))" > wallet_component/helpers.py
-          touch wallet_component/__init__.py
+          echo "# Streamlit Wallet Integration Component" > README.md
+          echo "__pycache__/" >> .gitignore
+          echo "node_modules/" >> .gitignore
+          echo "build/" >> .gitignore
 
-          # Creating frontend files
-          echo "Initializing frontend files..."
-          echo "import React from 'react';\nimport './styles.css';\n\nconst WalletConnect = () => {\n    return (\n        <div>\n            <h2>Wallet Connect Component</h2>\n        </div>\n    );\n};\n\nexport default WalletConnect;" > wallet_component/frontend/src/WalletConnect.js
-          echo "export const setupWeb3 = () => {\n    console.log('Setting up Web3...');\n}" > wallet_component/frontend/src/utils/web3Helpers.js
-          echo "import React from 'react';\nimport ReactDOM from 'react-dom';\nimport WalletConnect from './WalletConnect';\n\nReactDOM.render(<WalletConnect />, document.getElementById('root'));" > wallet_component/frontend/src/index.js
-
-          # Webpack config
-          echo "module.exports = {\n    entry: './src/index.js',\n    output: {\n        path: __dirname + '/build',\n        filename: 'bundle.js',\n    },\n    module: {\n        rules: [\n            {\n                test: /\.js$/,\n                exclude: /node_modules/,\n                use: 'babel-loader',\n            },\n            {\n                test: /\.css$/,\n                use: ['style-loader', 'css-loader'],\n            },\n        ],\n    },\n};" > wallet_component/frontend/webpack.config.js
-
-          # Creating Python test app
-          echo "import streamlit as st\nfrom wallet_component import wallet_component\n\ndef app():\n    st.title('Test Wallet Component')\n    wallet_address = wallet_component()\n    if wallet_address:\n        st.success(f'Wallet Connected: {wallet_address}')\n    else:\n        st.warning('Please connect your wallet.')\n\nif __name__ == '__main__':\n    app()" > test_app.py
-
-          # Package files
-          echo "streamlit\nweb3" > requirements.txt
-          echo "from setuptools import setup, find_packages\n\nsetup(\n    name='wallet_component',\n    version='0.1',\n    packages=find_packages(),\n    install_requires=['streamlit', 'web3']\n)" > setup.py
-
-          # Create README
-          echo "# Wallet Component\n\nThis repository provides a reusable Streamlit wallet integration component built using React and Web3.js." > README.md
-
-          # Create .gitignore
-          echo "node_modules/\n__pycache__/\n*.pyc\n*.pyo\n*.pyd\nbuild/\ndist/" > .gitignore
-
-      - name: Commit Repository Structure
+      - name: Create Python backend files
         run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git add .
-          git commit -m "Initialize Wallet Component Repository Structure"
-          git push origin main
+          echo "from streamlit.components.v1 import declare_component" > wallet_component/wallet_component.py
+          echo "import os" >> wallet_component/wallet_component.py
+          echo "wallet_component = declare_component('wallet_component', path=os.path.dirname(__file__))" >> wallet_component/wallet_component.py
+          echo "from setuptools import setup, find_packages" > setup.py
+          echo "setup(name='wallet_component', version='0.1', packages=find_packages())" >> setup.py
+          echo "streamlit\nweb3" > requirements.txt
+
+      - name: Create frontend files
+        run: |
+          echo "{ \"name\": \"frontend\", \"version\": \"1.0.0\", \"dependencies\": { \"react\": \"^18.2.0\", \"web3\": \"^1.10.0\", \"@streamlit/component-lib\": \"^2.1.1\" }, \"scripts\": { \"start\": \"react-scripts start\", \"build\": \"react-scripts build\" } }" > wallet_component/frontend/package.json
+          echo "import React from 'react';" > wallet_component/frontend/src/WalletConnect.js
+          echo "import { Web3Provider } from '@ethersproject/providers';" >> wallet_component/frontend/src/WalletConnect.js
+          echo "export default function WalletConnect() { return <button>Connect Wallet</button>; }" >> wallet_component/frontend/src/WalletConnect.js
+          echo "import React from 'react'; import ReactDOM from 'react-dom'; import WalletConnect from './WalletConnect'; ReactDOM.render(<WalletConnect />, document.getElementBy
