@@ -27,7 +27,7 @@ jobs:
       # Create frontend structure and files
       - name: Create frontend structure and files
         run: |
-          mkdir -p wallet/frontend/public wallet/frontend/src
+          mkdir -p frontend/public frontend/src
           echo '{
             "name": "frontend",
             "version": "1.0.0",
@@ -43,38 +43,37 @@ jobs:
               "start": "react-scripts start",
               "build": "react-scripts build"
             }
-          }' > wallet/frontend/package.json
-          echo "<!DOCTYPE html><html><head><title>Wallet Component</title></head><body><div id='root'></div></body></html>" > wallet/frontend/public/index.html
-          echo "import React from 'react';" > wallet/frontend/src/WalletConnect.js
-          echo "import { Web3Provider } from '@ethersproject/providers';" >> wallet/frontend/src/WalletConnect.js
-          echo "export default function WalletConnect() { return <button>Connect Wallet</button>; }" >> wallet/frontend/src/WalletConnect.js
-          echo "import React from 'react'; import ReactDOM from 'react-dom'; import WalletConnect from './WalletConnect'; ReactDOM.render(<WalletConnect />, document.getElementById('root'));" > wallet/frontend/src/index.js
+          }' > frontend/package.json
+          echo "<!DOCTYPE html><html><head><title>Wallet Component</title></head><body><div id='root'></div></body></html>" > frontend/public/index.html
+          echo "import React from 'react';" > frontend/src/WalletConnect.js
+          echo "import { Web3Provider } from '@ethersproject/providers';" >> frontend/src/WalletConnect.js
+          echo "export default function WalletConnect() { return <button>Connect Wallet</button>; }" >> frontend/src/WalletConnect.js
+          echo "import React from 'react'; import ReactDOM from 'react-dom'; import WalletConnect from './WalletConnect'; ReactDOM.render(<WalletConnect />, document.getElementById('root'));" > frontend/src/index.js
 
       # Install frontend dependencies
       - name: Install frontend dependencies
-        working-directory: wallet/frontend
+        working-directory: frontend
         run: |
           npm install
 
       # Build frontend
       - name: Build frontend
-        working-directory: wallet/frontend
+        working-directory: frontend
         run: |
           npm run build
 
       # Create Streamlit app
       - name: Create Streamlit app
         run: |
-          mkdir -p wallet
-          echo "import streamlit as st" > wallet/app.py
-          echo "from streamlit.components.v1 import declare_component" >> wallet/app.py
-          echo "wallet_component = declare_component('wallet_component', path='./frontend/build')" >> wallet/app.py
-          echo "st.title('Wallet Connect Test')" >> wallet/app.py
-          echo "wallet_address = wallet_component()" >> wallet/app.py
-          echo "if wallet_address:" >> wallet/app.py
-          echo "    st.success(f'Wallet Connected: {wallet_address}')" >> wallet/app.py
-          echo "else:" >> wallet/app.py
-          echo "    st.warning('Please connect your wallet.')" >> wallet/app.py
+          echo "import streamlit as st" > app.py
+          echo "from streamlit.components.v1 import declare_component" >> app.py
+          echo "wallet_component = declare_component('wallet_component', path='./frontend/build')" >> app.py
+          echo "st.title('Wallet Connect Test')" >> app.py
+          echo "wallet_address = wallet_component()" >> app.py
+          echo "if wallet_address:" >> app.py
+          echo "    st.success(f'Wallet Connected: {wallet_address}')" >> app.py
+          echo "else:" >> app.py
+          echo "    st.warning('Please connect your wallet.')" >> app.py
 
       # Set up Python environment
       - name: Set up Python
@@ -95,6 +94,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add wallet/frontend wallet/app.py
-          git commit -m "Build frontend and create Streamlit app"
+          git add frontend app.py
+          git commit -m "Build frontend and create Streamlit app at root level"
           git push origin main
