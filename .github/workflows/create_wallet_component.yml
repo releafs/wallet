@@ -9,8 +9,8 @@ on:
       - main
 
 jobs:
-  build_and_deploy:
-    name: Build and Deploy Streamlit App
+  build_and_prepare:
+    name: Build and Prepare Streamlit App
     runs-on: ubuntu-latest
 
     steps:
@@ -90,9 +90,8 @@ jobs:
           pip install --upgrade pip
           pip install streamlit
 
-      # Deploy Streamlit app
-      - name: Deploy Streamlit app
+      # Deploy Streamlit app (Optional - comment out this step)
+      - name: (Optional) Deploy Streamlit app
+        if: always()
         run: |
-          source venv/bin/activate
-          echo "Deploying Streamlit app..."
-          streamlit run wallet/app.py --server.headless true
+          echo "Skipping Streamlit deployment. You can deploy it manually."
