@@ -1,4 +1,4 @@
-name: Build, Test, and Commit Streamlit App
+name: Build, Test, and Deploy Streamlit App
 
 on:
   push:
@@ -9,8 +9,8 @@ on:
       - main
 
 jobs:
-  build_and_push:
-    name: Build and Commit Streamlit App
+  build_and_deploy:
+    name: Build, Test, and Deploy Streamlit App
     runs-on: ubuntu-latest
 
     steps:
@@ -24,32 +24,6 @@ jobs:
         with:
           node-version: "16"
 
-      # Create frontend structure and files
-      - name: Create frontend structure and files
-        run: |
-          mkdir -p frontend/public frontend/src
-          echo '{
-            "name": "frontend",
-            "version": "1.0.0",
-            "dependencies": {
-              "react": "^18.2.0",
-              "react-dom": "^18.2.0",
-              "web3": "^1.10.0",
-              "@ethersproject/providers": "^5.7.2",
-              "streamlit-component-lib": "^1.3.0",
-              "react-scripts": "^5.0.1"
-            },
-            "scripts": {
-              "start": "react-scripts start",
-              "build": "react-scripts build"
-            }
-          }' > frontend/package.json
-          echo "<!DOCTYPE html><html><head><title>Wallet Component</title></head><body><div id='root'></div></body></html>" > frontend/public/index.html
-          echo "import React from 'react';" > frontend/src/WalletConnect.js
-          echo "import { Web3Provider } from '@ethersproject/providers';" >> frontend/src/WalletConnect.js
-          echo "export default function WalletConnect() { return <button>Connect Wallet</button>; }" >> frontend/src/WalletConnect.js
-          echo "import React from 'react'; import ReactDOM from 'react-dom'; import WalletConnect from './WalletConnect'; ReactDOM.render(<WalletConnect />, document.getElementById('root'));" > frontend/src/index.js
-
       # Install frontend dependencies
       - name: Install frontend dependencies
         working-directory: frontend
@@ -62,20 +36,16 @@ jobs:
         run: |
           npm run build
 
-      # Create Streamlit app
-      - name: Create Streamlit app
+      # Push build files to repository
+      - name: Commit and push build files
         run: |
-          echo "import streamlit as st" > app.py
-          echo "from streamlit.components.v1 import declare_component" >> app.py
-          echo "wallet_component = declare_component('wallet_component', path='./frontend/build')" >> app.py
-          echo "st.title('Wallet Connect Test')" >> app.py
-          echo "wallet_address = wallet_component()" >> app.py
-          echo "if wallet_address:" >> app.py
-          echo "    st.success(f'Wallet Connected: {wallet_address}')" >> app.py
-          echo "else:" >> app.py
-          echo "    st.warning('Please connect your wallet.')" >> app.py
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add frontend/build
+          git commit -m "Add frontend build files"
+          git push origin main
 
-      # Set up Python environment
+      # Set up Python for Streamlit
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -89,11 +59,8 @@ jobs:
           pip install --upgrade pip
           pip install streamlit
 
-      # Commit and push changes back to the repository
-      - name: Commit and push changes
+      # Deploy Streamlit app
+      - name: Deploy Streamlit app
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add frontend app.py
-          git commit -m "Build frontend and create Streamlit app at root level"
-          git push origin main
+          source venv/bin/activate
+          streamlit run wallet/app.py --server.headless true
